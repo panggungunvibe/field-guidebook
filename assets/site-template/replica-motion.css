@@ -1,0 +1,329 @@
+/* The moving field has repeated visual slots, and a separate native reading list. */
+.gallery-stage { perspective: none; }
+.gallery-visual { position:absolute; inset:0; height:calc(100% + var(--gallery-bleed,360px)); pointer-events:none; mask-image:linear-gradient(#000 calc(100% - 216px),transparent); }
+.gallery-visual[hidden] { display:none; }
+.gallery-canvas-host { position:absolute; inset:0; pointer-events:none; }
+.gallery-canvas { display:block; width:100%; height:100%; }
+.gallery-stage:is([data-renderer="webgpu"],[data-renderer="canvas2d"]) .gallery-visual { mask-image:none; }
+.gallery-stage:is([data-renderer="webgpu"],[data-renderer="canvas2d"]) .gallery-visual .hero-book { background:none; box-shadow:none; }
+.gallery-stage:is([data-renderer="webgpu"],[data-renderer="canvas2d"]) .gallery-visual .book-volume { visibility:hidden; }
+.gallery-visual .hero-book { pointer-events:auto; }
+.hero-book { text-decoration:none; color:inherit; }
+.book-volume { --book-yaw:inherit; --book-pitch:inherit; }
+.gallery-stage:not([data-reading]):not([data-manual]) .book-field {
+  clip-path:inset(50%); white-space:nowrap; width:1px; min-width:0; height:1px;
+  min-height:0; margin:-1px; padding:0; position:absolute; overflow:hidden;
+}
+.gallery-stage:is([data-reading],[data-manual]) { height:auto; min-height:var(--scene-height); }
+.gallery-stage:is([data-reading],[data-manual]) .hero-book { perspective:900px; }
+.gallery-stage:is([data-reading],[data-manual]) .book-field:has(.hero-book:focus-visible) .hero-book:not(:focus-visible) { filter:grayscale(1); }
+.gallery-stage[data-filter=out] .gallery-visual { opacity:0; transform:translateY(14px) scale(.985); transition:opacity 160ms,transform 160ms; }
+.gallery-stage[data-filter=in] .gallery-visual { animation:gallery-filter-in 520ms cubic-bezier(.22,1,.36,1) both; }
+.gallery-stage[data-entering]:not([data-filter]):not([data-manual]):not([data-reading]) .gallery-visual { animation:gallery-enter 600ms cubic-bezier(.23,1,.32,1) both; }
+@keyframes gallery-enter { from { opacity:0; } to { opacity:1; } }
+.flight-overlay { perspective:none; }
+.flight-paper { container-type:normal; background:transparent; box-shadow:none; transform-origin:50% 50%; will-change:transform; }
+.flight-paper > :is(.book-volume,.mini-volume) {
+  position:absolute!important; inset:0!important; width:100%!important; height:100%!important;
+  margin:0!important; visibility:visible!important; transform:none!important;
+  transform-origin:50%!important; transition:none!important; animation:none!important;
+}
+.flight-paper :is(.book-cover,.book-back,.book-spine,.mini-cover,.mini-back,.mini-spine) > * { opacity:var(--flight-content-opacity,1); }
+.flight-paper :is(.book-cover,.book-back,.book-spine,.mini-cover,.mini-back,.mini-spine)::before {
+  content:""; position:absolute; z-index:20; inset:0; pointer-events:none;
+  background:var(--flight-color); mix-blend-mode:normal;
+  opacity:calc(1 - var(--flight-content-opacity,1)); transition:none;
+}
+.flight-paper :is(.book-cover,.mini-cover)::after { opacity:var(--flight-content-opacity,1); }
+.flight-paper .book-cover { transform:translateZ(13px); }
+.flight-paper .mini-cover { transform:translateZ(19px); }
+.flight-paper .mini-art img { opacity:1; }
+@media (prefers-reduced-motion:reduce) {
+  .gallery-stage[data-filter] .gallery-visual { animation:none; transition:none; }
+}
+
+/* Reconstructed from the delivered Deimos header, hero, search and footer CSS.
+   Typography keeps CJK fallbacks for the substituted guidebook text; Geist and
+   Geist Serif are the reference Latin font families, loaded by the font sheet. */
+:root {
+  --sans:"Geist", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
+  --serif:"Geist Serif", "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+  --mono:var(--sans);
+}
+.header-inner { gap:4px 16px; padding:8px 16px; }
+.theme-toggle { letter-spacing:.01em; }
+.theme-toggle button { min-width:0; padding:4px 12px; line-height:1.5; }
+.theme-toggle button:hover:not(:disabled):not([aria-pressed="true"]) { color:var(--fg); }
+.theme-toggle button:focus-visible { outline:2px solid currentColor; outline-offset:-2px; }
+.home-hero {
+  --scene-height:clamp(640px, calc(80svh - 48px), 900px);
+  --scene-bleed-space:160px;
+  min-height:max(calc(var(--scene-height) + var(--scene-bleed-space)), calc(var(--hero-content-floor, 0px) + 520px));
+}
+.hero-copy { top:clamp(48px, 8svh, 96px); width:calc(100% - 48px); max-width:450px; }
+.hero-copy h1 { font-size:26.2743cqi; }
+.hero-copy h1 > span { white-space:nowrap; }
+.hero-description {
+  width:100%; max-width:none; margin:24px 0 0;
+  font-family:var(--sans); font-size:clamp(15px, 1.2vw, 17px); line-height:1.5;
+  color:color-mix(in srgb, var(--fg) 64%, var(--bg));
+}
+.topic-search {
+  display:flex; align-items:stretch; gap:12px; min-width:0; min-height:48px;
+  margin-top:24px; border:0; border-radius:0; padding:0; background:transparent;
+}
+.topic-search input {
+  height:auto; min-height:48px; min-width:0; flex:1;
+  padding:12px 0 12px 26px; box-shadow:none;
+  border-bottom-color:color-mix(in srgb, var(--fg) 20%, transparent);
+}
+.topic-search input::placeholder { color:color-mix(in srgb, var(--fg) 64%, var(--bg)); opacity:1; }
+.topic-search input.is-rotating::placeholder { color:transparent; }
+.topic-search input.is-clearable { padding-right:32px; }
+.topic-search input:focus { border-bottom-color:var(--fg); }
+.topic-search input:disabled { cursor:wait; opacity:.6; }
+.topic-input-wrap > svg { width:16px; height:16px; pointer-events:none; transition:color .16s; }
+.topic-input-wrap:focus-within > svg { color:var(--fg); }
+.topic-search > button[type="submit"] {
+  width:40px; height:40px; flex:0 0 40px; align-self:flex-end;
+  margin-bottom:4px; padding:0; color:var(--fg); background:var(--bg);
+  border-color:color-mix(in srgb, var(--fg) 20%, transparent);
+  transition:border-color .16s, background-color .16s, transform .16s;
+}
+.topic-search > button[type="submit"]:is(:hover,:focus-visible) { color:var(--fg); background:var(--bg); transform:none; }
+.topic-search > button[type="submit"]:hover:not(:disabled) {
+  border-color:color-mix(in srgb, var(--fg) 64%, var(--bg));
+  background:color-mix(in srgb, var(--fg) 9%, var(--bg));
+}
+.topic-search > button[type="submit"]:active:not(:disabled) { transform:scale(.94); }
+.topic-search > button[type="submit"]:focus-visible { outline:2px solid var(--fg); outline-offset:2px; }
+.topic-search > button[type="submit"]:disabled { cursor:wait; opacity:.6; }
+.home-footer, .article-footer { min-height:0; padding-top:0; }
+.footer-meta {
+  flex-wrap:wrap; align-items:center; gap:8px 32px; max-width:1180px;
+  padding:20px 24px; font-size:10.5px; line-height:1.5; letter-spacing:.01em;
+  color:color-mix(in srgb, var(--fg) 50%, var(--bg));
+}
+.footer-wordmark-frame {
+  width:100%; height:.62em; overflow:hidden; margin-top:40px; padding-inline:16px;
+  text-align:center; font-size:clamp(64px, 27vw, 800px); line-height:1;
+  -webkit-mask-image:linear-gradient(to bottom, #000 10%, transparent 100%);
+  mask-image:linear-gradient(to bottom, #000 10%, transparent 100%);
+}
+.footer-wordmark {
+  display:block; position:relative; inset:auto; width:auto; transform:none;
+  font-size:clamp(64px, 27vw, 800px); line-height:.85; font-weight:400;
+  letter-spacing:-.055em; text-decoration:none; color:var(--fg);
+  -webkit-text-fill-color:var(--bg); -webkit-text-stroke:1px currentColor;
+  paint-order:stroke fill; -webkit-mask-image:none; mask-image:none;
+}
+.footer-wordmark::after {
+  content:attr(data-wordmark); position:absolute; inset:0; pointer-events:none;
+  background-image:repeating-linear-gradient(-45deg, color-mix(in srgb, currentColor 42%, transparent) 0 1px, transparent 1px 7px);
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; -webkit-text-stroke:0;
+}
+.footer-wordmark:focus-visible { outline:2px solid var(--fg); outline-offset:4px; }
+@media (min-width:640px) {
+  .footer-wordmark-frame { margin-top:64px; padding-inline:24px; }
+}
+@media (max-width:767px) {
+  .header-inner:not(:has(.header-search-shell)) { flex-wrap:nowrap; }
+  .header-inner:not(:has(.header-search-shell)) :is(.header-navigation,.header-utility) { width:auto; }
+  .header-inner:not(:has(.header-search-shell)) .header-utility { flex:1; justify-content:flex-end; }
+}
+@media (min-width:768px) {
+  .header-inner { gap:16px; padding-inline:24px; }
+}
+@media (max-width:768px) {
+  .home-hero { --scene-height:660px; }
+  .hero-copy { top:40px; }
+  .hero-copy::before {
+    content:""; position:absolute; z-index:-1; inset:-24px calc(50% - 50vw); pointer-events:none;
+    background:linear-gradient(to bottom, var(--bg) 0%, color-mix(in srgb, var(--bg) 94%, transparent) 72%, transparent 100%);
+  }
+  .hero-description { margin-top:20px; }
+}
+@media (max-width:640px) {
+  .home-hero {
+    --hero-native-card-height:280px; --scene-bleed-space:0px;
+    min-height:max(var(--scene-height), calc(var(--hero-content-floor, 0px) + 360px));
+  }
+}
+.home-hero:has(.gallery-stage:is([data-reading],[data-manual])) {
+  min-height:max(var(--scene-height), calc(var(--hero-content-floor, 0px) + var(--hero-native-card-height, 310px) + 104px));
+}
+@media (max-width:360px) { .topic-search { gap:8px; } }
+@media (prefers-reduced-motion:reduce) {
+  .home-hero { --scene-bleed-space:0px; }
+  .topic-search > button[type="submit"], .topic-input-wrap > svg { transition:none; }
+}
+
+/* Reference global tokens (2kx5vyebxbig3.css). Article paper still supplies
+   its own --bg and --fg; mixing with that background preserves those tokens. */
+:root, :root[data-theme="dark"], body[data-page="article"] {
+  --muted:color-mix(in srgb, var(--fg) 64%, var(--bg));
+  --subtle:color-mix(in srgb, var(--fg) 50%, var(--bg));
+  --surface:color-mix(in srgb, var(--fg) 5%, var(--bg));
+  --rule:color-mix(in srgb, var(--fg) 10%, transparent);
+  --rule-strong:color-mix(in srgb, var(--fg) 20%, transparent);
+}
+body { transition:none; }
+body::after { z-index:2147483646; opacity:1; mix-blend-mode:multiply; filter:none; }
+:root[data-theme="dark"] body:not([data-page="article"])::after {
+  opacity:.6; mix-blend-mode:screen; filter:invert(1);
+}
+
+/* The public gallery renderer paints each front as a 230 × 310 texture, even
+   when the mobile pose is 200 × 280. Keep the artwork in that logical space;
+   its enclosing face retains the existing 3D pose and flight transform.
+   Controller texture layout: top band35.5; copy band81 + titleLines ×26;
+   kickerY12; titleY31.5; footerRuleY45.5 + titleLines ×26. */
+.hero-book { width:230px; height:310px; }
+.book-cover {
+  container-type:size; border:0; background-color:var(--book-color);
+  background-image:none; box-shadow:none;
+}
+.book-cover::after { content:none; }
+.book-front-artwork {
+  position:absolute; top:0; left:0; display:flex; flex-direction:column;
+  width:230px; height:310px; transform-origin:0 0;
+  color:#171614; background:var(--book-color); text-align:left;
+}
+.book-front-artwork::after {
+  content:""; position:absolute; inset:0 auto 0 0; width:7px; pointer-events:none;
+  background:linear-gradient(to right,
+    rgb(23 22 20 / .15) 0 2.5px, rgb(23 22 20 / .07) 2.5px 5px,
+    transparent 5px 6px, rgb(23 22 20 / .1) 6px 7px);
+}
+.book-front-artwork .book-head {
+  flex:0 0 35.5px; height:35.5px; padding:12px 16px 0;
+  font-size:9px; line-height:9px; letter-spacing:0; white-space:nowrap;
+}
+.book-front-artwork .book-art { flex:1 1 0; min-height:0; border:0; background:var(--book-color); }
+.book-front-artwork .book-art img,
+:root[data-theme="dark"] body:not([data-page="article"]) .book-front-artwork .book-art img {
+  display:block; width:100%; height:100%; opacity:1;
+  object-fit:cover; object-position:50% 30%;
+  filter:grayscale(1) contrast(1.08); mix-blend-mode:multiply;
+}
+.book-front-artwork .book-copy { display:block; flex:none; padding:12px 16px 18.5px; }
+.book-front-artwork .book-kicker {
+  display:block; height:9px; margin:0 0 10.5px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:9px; line-height:9px; letter-spacing:0;
+}
+.book-front-artwork .book-title {
+  margin:0; font-size:var(--front-title-size,25px); line-height:1.04;
+  font-weight:400; letter-spacing:0; -webkit-line-clamp:4;
+}
+.book-front-artwork .book-meta {
+  align-items:flex-start; gap:8px; margin-top:14px; padding-top:7px;
+  border-top:1px solid rgb(23 22 20 / .2);
+  font-size:9px; line-height:9px; letter-spacing:0;
+}
+.book-front-artwork .book-meta span:first-child {
+  display:block; flex:1; min-width:0; max-width:none; line-height:9px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; -webkit-line-clamp:unset;
+}
+.book-front-artwork .book-meta span:last-child { flex:none; white-space:nowrap; }
+@media (max-width:639px) { .hero-book { width:200px; height:280px; } }
+@container (width:200px) {
+  .book-front-artwork { transform:scale(.8695652173913043,.9032258064516129); }
+}
+
+/* Moving-gallery lighting from the public closed-book vertex shader:
+   clamp(.72 + .28*n.z + .08*n.x - .12*n.y, .5, 1.08), with normals yawed
+   around Y then pitched around X. Keep this separate from the native list
+   and DOM flight, whose reference volumes have labelled spines. */
+.gallery-visual .book-volume {
+  --face-front-light:clamp(.5, calc(.72 + .28 * cos(var(--book-yaw)) * cos(var(--book-pitch)) + .08 * sin(var(--book-yaw)) + .12 * cos(var(--book-yaw)) * sin(var(--book-pitch))), 1.08);
+  --face-back-light:clamp(.5, calc(.72 - .28 * cos(var(--book-yaw)) * cos(var(--book-pitch)) - .08 * sin(var(--book-yaw)) - .12 * cos(var(--book-yaw)) * sin(var(--book-pitch))), 1.08);
+  --face-spine-light:clamp(.5, calc(.72 + .28 * sin(var(--book-yaw)) * cos(var(--book-pitch)) - .08 * cos(var(--book-yaw)) + .12 * sin(var(--book-yaw)) * sin(var(--book-pitch))), 1.08);
+  --face-pages-light:clamp(.5, calc(.72 - .28 * sin(var(--book-yaw)) * cos(var(--book-pitch)) + .08 * cos(var(--book-yaw)) - .12 * sin(var(--book-yaw)) * sin(var(--book-pitch))), 1.08);
+  --face-top-light:clamp(.5, calc(.72 - .28 * sin(var(--book-pitch)) + .12 * cos(var(--book-pitch))), 1.08);
+  --face-bottom-light:clamp(.5, calc(.72 + .28 * sin(var(--book-pitch)) - .12 * cos(var(--book-pitch))), 1.08);
+}
+.gallery-visual .book-cover { filter:brightness(var(--face-front-light)); }
+.gallery-visual .book-back { filter:brightness(var(--face-back-light)); }
+.gallery-visual .book-spine {
+  border:0; background:var(--book-color); filter:brightness(var(--face-spine-light));
+}
+.gallery-visual .book-spine > * { visibility:hidden; }
+.gallery-visual .book-pages { filter:brightness(var(--face-pages-light)); }
+.gallery-visual .book-top { filter:brightness(var(--face-top-light)); }
+.gallery-visual .book-bottom { filter:brightness(var(--face-bottom-light)); }
+
+/* The archived homepage also has the b2vR-W recommended shelf. Its parent is
+   the 1180px container with 24px padding, not the full-bleed hero. There is no
+   visible heading. The 16 guide records replace the snapshot's 18 records. */
+.home-recommended {
+  --cover-width:210px; --book-depth:38px; --shelf-cover:#ededea;
+  --book-ink:#fff;
+  --book-ink-gradient:linear-gradient(125deg,#fff 5%,#dedee2 24%,#fff 33%,#e9e9ec 42%,#fff 58%,#d0d0d5 78%,#fff 94%);
+  --book-ink-shadow:0 -.5px 0 #fffffff2,0 .5px 0 #00000038;
+  --book-material-line:#00000012;
+  --book-image-filter:grayscale(1) invert(1) brightness(.32) contrast(1.15) invert(1);
+  --book-image-blend:multiply;
+  --book-page-light:#f8f8f6; --book-page-shade:#d9d9d6; --book-page-mid:#e7e7e4;
+  --book-contact-shadow:#1112163d; --book-cast-shadow:#1112161a;
+  position:relative; z-index:10; width:calc(100% - 48px); max-width:1132px;
+  margin:32px auto 0; padding:24px 0 0; border:0; background:var(--bg);
+}
+:root[data-theme="dark"] .home-recommended {
+  --shelf-cover:#161618; --book-ink:#050506;
+  --book-ink-gradient:linear-gradient(125deg,#050506 5%,#29292c 24%,#77777c 33%,#202023 42%,#080809 58%,#505055 78%,#0b0b0d 94%);
+  --book-ink-shadow:0 -.5px 0 #ffffff26,0 .5px 0 #000000b3;
+  --book-material-line:#ffffff14;
+  --book-image-filter:grayscale(1) brightness(.32) contrast(1.15); --book-image-blend:screen;
+  --book-page-light:#222225; --book-page-shade:#0e0e10; --book-page-mid:#19191b;
+  --book-contact-shadow:#000000a6; --book-cast-shadow:#00000047;
+}
+.home-recommended::before { content:""; position:absolute; z-index:-1; inset:0 calc(50% - 50vw); background:var(--bg); }
+.home-recommended .home-shelf-viewport {
+  width:auto; margin-top:12px; scroll-padding-inline:24px;
+  scrollbar-color:var(--rule-strong) transparent;
+}
+.home-recommended .home-shelf {
+  min-height:0; margin:0; padding:64px 32px 24px; gap:4px;
+  align-items:flex-end; justify-content:center; list-style:none; zoom:1;
+}
+.home-recommended .home-shelf > li { display:block; flex:none; margin:0; padding:0; scroll-snap-align:start; }
+.home-recommended .mini-book { background:transparent; }
+.home-recommended .mini-volume > span {
+  background-color:var(--shelf-cover); border-color:var(--book-material-line);
+  background-image:repeating-linear-gradient(0deg,#ffffff02 0 1px,transparent 1px 3px),linear-gradient(115deg,#ffffff05,transparent 45%,#0000001a);
+}
+.home-recommended .mini-volume > .mini-spine { box-shadow:inset 1px 0 #ffffff0d,inset -3px 0 5px #00000038; }
+:is(.home-recommended,.flight-paper[data-home-shelf]) .mini-spine::after { content:""; position:absolute; inset:0 5px 0 auto; width:1px; background:var(--book-material-line); }
+.home-recommended .mini-volume > .mini-cover { border-color:#1112162e; box-shadow:inset -1px 0 #1112161f,4px 3px 8px #1112161c,10px 8px 18px #1112160d; }
+:is(.home-recommended,.flight-paper[data-home-shelf]) .mini-cover::after { border-right-color:var(--book-material-line); background:linear-gradient(90deg,#00000026,transparent); }
+.home-recommended .mini-volume > .mini-edge {
+  border-color:#11121633; box-shadow:inset 1px 0 1px #11121629,inset -1px 0 1px #1112161f;
+  background:linear-gradient(0deg,var(--shelf-cover) 0 3px,transparent 3px calc(100% - 3px),var(--shelf-cover) calc(100% - 3px)),linear-gradient(90deg,var(--shelf-cover) 0 3px,transparent 3px calc(100% - 3px),var(--shelf-cover) calc(100% - 3px)),repeating-linear-gradient(90deg,var(--book-page-light) 0 1px,var(--book-page-shade) 1px 2px,var(--book-page-mid) 2px 3px);
+}
+.home-recommended .mini-volume > :is(.mini-top,.mini-bottom) {
+  background:linear-gradient(0deg,var(--shelf-cover) 0 3px,transparent 3px calc(100% - 3px),var(--shelf-cover) calc(100% - 3px)),repeating-linear-gradient(0deg,var(--book-page-light) 0 1px,var(--book-page-shade) 1px 2px,var(--book-page-mid) 2px 3px);
+}
+.home-recommended .mini-art { background:var(--shelf-cover); }
+.home-recommended .home-shelf .mini-art img,
+:root[data-theme="dark"] .home-recommended .home-shelf .mini-art img {
+  opacity:1; object-position:50% 30%; filter:var(--book-image-filter); mix-blend-mode:var(--book-image-blend);
+}
+.home-recommended .mini-volume :is(.mini-spine > *, .mini-copy > small, .mini-copy > strong, .mini-head > span, .mini-foot > span, .mini-back > strong, .mini-back > span) { text-shadow:var(--book-ink-shadow); }
+.home-recommended .mini-foot { border-top-color:var(--book-material-line); }
+.home-recommended .mini-book::before { background:radial-gradient(ellipse at 42% 20%,var(--book-cast-shadow),transparent 72%); }
+.home-recommended .mini-book::after { background:radial-gradient(ellipse at 50% 0%,var(--book-contact-shadow),transparent 80%); }
+:root[data-theme="dark"] .home-recommended .mini-volume > .mini-cover { border-color:var(--book-material-line); box-shadow:inset -2px 0 3px #0000002e; }
+:root[data-theme="dark"] .home-recommended .mini-volume > .mini-edge { border-color:var(--book-material-line); box-shadow:inset 0 0 7px #1716141f; }
+@media (max-width:640px) {
+  .home-recommended { margin-top:0; padding-top:8px; }
+  .home-recommended .home-shelf { padding:40px 40px 24px; zoom:.6; }
+  .home-recommended .home-shelf-viewport { margin-inline:calc(50% - 50vw); }
+}
+@media (forced-colors:active) {
+  .home-recommended .mini-volume > span { color:CanvasText; background:Canvas; border:1px solid CanvasText; }
+  .home-recommended .mini-volume :is(.mini-spine > *, .mini-copy > small, .mini-copy > strong, .mini-head > span, .mini-foot > span, .mini-back > strong, .mini-back > span) { color:CanvasText; -webkit-text-fill-color:CanvasText; background-image:none; text-shadow:none; }
+  .home-recommended .mini-art img, .home-recommended .mini-sheen,
+  .home-recommended .mini-book::before, .home-recommended .mini-book::after { display:none; }
+}

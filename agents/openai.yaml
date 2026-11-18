@@ -1,0 +1,4 @@
+interface:
+  display_name: "科普漫游 Guidebook"
+  short_description: "先完整运行交互书本网站，再用你的科普主题、照片和文字替换内容"
+  default_prompt: "使用 $field-guidebook，先把内置网站完整运行出来，再问我想做什么科普并收集图片和介绍文字。"
